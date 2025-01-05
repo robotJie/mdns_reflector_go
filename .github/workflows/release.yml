@@ -24,17 +24,13 @@ jobs:
 
       - name: Build for macOS ${{ matrix.goarch }}
         run: |
-          GOOS=darwin GOARCH=${{ matrix.goarch }} go build -o myapp_${{ matrix.goarch }} ./main.go  # 替换 myapp 为你的项目名和入口路径
+          GOOS=darwin GOARCH=${{ matrix.goarch }} go build -o mdns_reflector_${{ matrix.goarch }} ./main.go  # 替换 myapp 为你的项目名和入口路径
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: mdns_reflector_macos-${{ matrix.goarch }}
-          path: myapp_${{ matrix.goarch }}
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
             repo_token: ${{ secrets.GITHUB_TOKEN }}
-            file: myapp_${{ matrix.goarch}}
-            asset_name: mdns_reflector_${{ matrix.goarch }}
+            file: mdns_reflector_*
+            # asset_name: mdns_reflector_*
+            file_glob: true
             overwrite: true
