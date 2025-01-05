@@ -2,8 +2,8 @@ name: Build macOS Binaries
 
 on:
   push:
-    branches:
-      - main  # 根据你的主分支调整
+    tags:
+      - 'v*.*.*'  
 
 jobs:
   build:
