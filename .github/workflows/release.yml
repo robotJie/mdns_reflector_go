@@ -1,0 +1,33 @@
+name: Build macOS Binaries
+
+on:
+  push:
+    branches:
+      - main  # 根据你的主分支调整
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    strategy:
+      matrix:
+        goarch: [arm64, amd64]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '>=1.18'  # 根据你的 Go 版本调整
+
+      - name: Build for macOS ${{ matrix.goarch }}
+        run: |
+          GOOS=darwin GOARCH=${{ matrix.goarch }} go build -o myapp_${{ matrix.goarch }} ./main.go  # 替换 myapp 为你的项目名和入口路径
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: mdns_reflector_macos-${{ matrix.goarch }}
+          path: myapp_${{ matrix.goarch }}
