@@ -37,3 +37,4 @@ jobs:
             repo_token: ${{ secrets.GITHUB_TOKEN }}
             file: myapp_${{ matrix.goarch}}
             asset_name: mdns_reflector_${{ matrix.goarch }}
+            overwrite: true
