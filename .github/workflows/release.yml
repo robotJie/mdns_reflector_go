@@ -31,3 +31,8 @@ jobs:
         with:
           name: mdns_reflector_macos-${{ matrix.goarch }}
           path: myapp_${{ matrix.goarch }}
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+            repo_token: ${{ secrets.GITHUB_TOKEN }}
+            file: myapp_${{ matrix.goarch}}
