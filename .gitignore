@@ -3,3 +3,4 @@
 !.github/**
 !main.go
 !.gitignore
+!README.md
