@@ -1,0 +1,36 @@
+name: Build macOS Binaries
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    strategy:
+      matrix:
+        goarch: [arm64, amd64]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '>=1.18'  # 根据你的 Go 版本调整
+
+      - name: Build for macOS ${{ matrix.goarch }}
+        run: |
+          GOOS=darwin GOARCH=${{ matrix.goarch }} go build -o mdns_reflector_${{ matrix.goarch }} ./main.go  # 替换 myapp 为你的项目名和入口路径
+
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+            repo_token: ${{ secrets.GITHUB_TOKEN }}
+            file: mdns_reflector_*
+            # asset_name: mdns_reflector_*
+            file_glob: true
+            overwrite: true
