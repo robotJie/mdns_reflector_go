@@ -24,7 +24,7 @@ func main() {
 	var configIfaces string
 
 	flag.StringVar(&ifaceNames, "ifaces", "", "指定需要反射mDNS报文的网络接口，使用逗号分隔，例如：-ifaces=eth0,en0")
-	flag.StringVar(&configIfaces, "config-ifaces", "", "指定需要反射mDNS报文的网络接口，使用逗号分隔，例如：-config-ifaces=eth0,en0")
+	flag.StringVar(&configIfaces, "config-ifaces", "", "持久化需要反射mDNS报文的网络接口，使用逗号分隔，例如：-config-ifaces=eth0,en0")
 	flag.Parse()
 
 	if configIfaces != "" {
