@@ -2,22 +2,55 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"net"
+	"os"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 )
 
+// Config 表示配置文件结构
+type Config struct {
+	Ifaces []string `yaml:"ifaces"`
+}
+
 func main() {
-	log.Println("mDNS reflector started")
+
+
+	// 定义命令行参数
 	var ifaceNames string
+	var configIfaces string
+
 	flag.StringVar(&ifaceNames, "ifaces", "", "指定需要反射mDNS报文的网络接口，使用逗号分隔，例如：-ifaces=eth0,en0")
+	flag.StringVar(&configIfaces, "config-ifaces", "", "指定需要反射mDNS报文的网络接口，使用逗号分隔，例如：-config-ifaces=eth0,en0")
 	flag.Parse()
 
-	if ifaceNames == "" {
-		log.Fatal("必须指定至少一个网络接口")
+	if configIfaces != "" {
+		saveConfig(configIfaces)
+		return
 	}
-	log.Println("ifaces params parsed")
-	ifaceNameList := strings.Split(ifaceNames, ",")
+
+	// 如果没有通过命令行指定接口，则尝试从配置文件读取
+	var ifaceNameList []string
+	if ifaceNames == "" {
+		config, err := loadConfig()
+		if err != nil {
+			log.Fatalf("无法加载配置文件: %v", err)
+		}
+
+		if len(config.Ifaces) == 0 {
+			log.Fatal("必须指定至少一个网络接口，可以通过--config-ifaces参数或config.yml配置文件")
+		}
+
+		ifaceNameList = config.Ifaces
+		log.Printf("从配置文件加载接口: %v", ifaceNameList)
+	} else {
+		ifaceNameList = strings.Split(ifaceNames, ",")
+		log.Println("从命令行参数加载接口")
+	}
+
 	ifaces := make([]*net.Interface, 0, len(ifaceNameList))
 
 	for _, name := range ifaceNameList {
@@ -27,6 +60,8 @@ func main() {
 		}
 		ifaces = append(ifaces, iface)
 	}
+
+	log.Println("mDNS reflector started")
 
 	// 存储每个接口对应的连接
 	conns := make(map[string]*net.UDPConn)
@@ -58,6 +93,48 @@ func main() {
 
 	// 阻塞主线程
 	select {}
+}
+
+// 保存配置到文件
+func saveConfig(ifacesStr string) {
+	ifacesList := strings.Split(ifacesStr, ",")
+	config := Config{
+		Ifaces: ifacesList,
+	}
+
+	data, err := yaml.Marshal(&config)
+	if err != nil {
+		log.Fatalf("无法序列化配置: %v", err)
+	}
+
+	err = os.WriteFile("config.yml", data, 0644)
+	if err != nil {
+		log.Fatalf("无法写入配置文件: %v", err)
+	}
+
+	fmt.Println("配置已保存到 config.yml")
+}
+
+// 从文件加载配置
+func loadConfig() (Config, error) {
+	config := Config{}
+
+	// 检查配置文件是否存在
+	if _, err := os.Stat("config.yml"); os.IsNotExist(err) {
+		return config, fmt.Errorf("配置文件 config.yml 不存在")
+	}
+
+	data, err := os.ReadFile("config.yml")
+	if err != nil {
+		return config, err
+	}
+
+	err = yaml.Unmarshal(data, &config)
+	if err != nil {
+		return config, err
+	}
+
+	return config, nil
 }
 
 func readPackets(srcIface *net.Interface, srcConn *net.UDPConn, conns map[string]*net.UDPConn) {
