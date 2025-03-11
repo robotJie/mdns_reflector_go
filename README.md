@@ -1,3 +1,15 @@
+## Brew实现下载并开机自启
+
+- brew tap robotJie/homebrew-tap
+
+- brew install mdns-reflector-go
+
+- mdns-reflector-go --config-ifaces en1,bridge100 (这个接口看自身情况，见下面FAQ)
+
+- brew services start mdns-reflector-go (可能会弹出“本地网络”权限窗口，需要授予)
+
+- ps aux| grep mdns (验证，可用于观察 mdns-reflector-go 是否启动)
+
 ## Usage
 
     ./mdns-reflector-go -ifaces=en1,bridge100
