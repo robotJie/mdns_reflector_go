@@ -6,10 +6,26 @@ import (
 	"log"
 	"net"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"gopkg.in/yaml.v3"
 )
+
+// 获取 HOME 环境变量
+var homeDir string
+var configFilePath string
+
+func init() {
+	var err error
+	homeDir, err = os.UserHomeDir() // Go 1.12+ 推荐方法
+	if err != nil {
+		log.Fatal(err)
+	}
+	// 构建配置文件路径
+	configFilePath = filepath.Join(homeDir, "Library/Application Support/robotJie.mdns-reflector-go/config.yml")
+}
+
 
 // Config 表示配置文件结构
 type Config struct {
@@ -17,7 +33,6 @@ type Config struct {
 }
 
 func main() {
-
 
 	// 定义命令行参数
 	var ifaceNames string
@@ -107,7 +122,16 @@ func saveConfig(ifacesStr string) {
 		log.Fatalf("无法序列化配置: %v", err)
 	}
 
-	err = os.WriteFile("config.yml", data, 0644)
+	// 获取目录部分
+	dir := filepath.Dir(configFilePath)
+
+	// 创建目录（如果不存在）
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		log.Fatalf("无法创建目录: %v", err)
+	}
+
+	// 然后写入文件
+	err = os.WriteFile(configFilePath, data, 0644)
 	if err != nil {
 		log.Fatalf("无法写入配置文件: %v", err)
 	}
@@ -120,11 +144,11 @@ func loadConfig() (Config, error) {
 	config := Config{}
 
 	// 检查配置文件是否存在
-	if _, err := os.Stat("config.yml"); os.IsNotExist(err) {
+	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
 		return config, fmt.Errorf("配置文件 config.yml 不存在")
 	}
 
-	data, err := os.ReadFile("config.yml")
+	data, err := os.ReadFile(configFilePath)
 	if err != nil {
 		return config, err
 	}
